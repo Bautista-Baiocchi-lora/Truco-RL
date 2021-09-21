@@ -80,8 +80,8 @@ class Envido:
         return state
 
     def get_envido_winner(self):    
-        p1_cards = np.concatenate(([card for player, card in self.game.cards_played if player == self.game.first_move_by], self.game.first_move_by.hand))
-        p2_cards = np.concatenate(([card for player, card in self.game.cards_played if player == self.game.second_move_by], self.game.second_move_by.hand))
+        p1_cards = np.concatenate(([card for player, card in self.game.get_cards_played() if player == self.game.first_move_by], self.game.first_move_by.hand))
+        p2_cards = np.concatenate(([card for player, card in self.game.get_cards_played() if player == self.game.second_move_by], self.game.second_move_by.hand))
         
         p1_envido = calculate_envido(p1_cards)
         p2_envido = calculate_envido(p2_cards)
@@ -115,19 +115,16 @@ class Envido:
         return is_wager_active(self.envido_calls)
 
     def take_action(self, player, action_played):
-        if not self.game.is_truco_active():
-            if len(self.envido_calls) == 0:
-                self.envido_calls.append((player, action_played))
-                logging.info(f"{player} called {action_played}.")
-                self.envido_next = self.game.get_opponent(player)
-            elif self.envido_calls[-1][0] != player and self.is_valid_envido_state(action_played):
-                self.envido_calls.append((player, action_played))
-                logging.info(f"{player} called {action_played}")
-                self.switch_envido_turn()
-            else:
-                logging.warn(f"{player} can't call {action_played}.")
+        if len(self.envido_calls) == 0:
+            self.envido_calls.append((player, action_played))
+            logging.info(f"{player} called {action_played}.")
+            self.envido_next = self.game.get_opponent(player)
+        elif self.envido_calls[-1][0] != player and self.is_valid_envido_state(action_played):
+            self.envido_calls.append((player, action_played))
+            logging.info(f"{player} called {action_played}")
+            self.switch_envido_turn()
         else:
-            logging.warn(f"{player}: Envido can only be played before Truco.")
+            logging.warn(f"{player} can't call {action_played}.")
 
     def take_terminal_action(self, player, action_played):
         self.envido_calls.append((player, action_played))

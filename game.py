@@ -25,7 +25,10 @@ class TrucoGame:
         self.second_move_by = self.players[1 - goes_first] 
         self.envido = Envido(self)
         self.truco = Truco(self)
-        self.card_game = CardGame(self)
+        self.card_game = CardGame(self, self.first_move_by)
+    
+    def get_cards_played(self):
+        return self.card_game.cards_played
 
     def update_score(self, player, score):
         if player == self.scoreboard[0][0]:
@@ -42,7 +45,7 @@ class TrucoGame:
         
     def finish_hand(self):
         self.finished = True
-        print("Hand finished.")
+        logging.info("Hand finished.")
         logging.info(f"{self.scoreboard[0][0]} scored {self.scoreboard[0][1]}")
         logging.info(f"{self.scoreboard[1][0]} scored {self.scoreboard[1][1]}")
     
@@ -54,7 +57,7 @@ class TrucoGame:
         comparison = first_played[1].tier - second_played[1].tier
         if comparison >= 0:
             self.card_game.switch_card_turn() # switch if second person wins round
-            logging.debug(f"{self.second_played[0]} won the round. They will start the next one.")
+            logging.debug(f"{second_played[0]} won the round. They will start the next one.")
         
         winner = self.card_game.get_card_winner()
         if winner is not None: 
@@ -74,7 +77,10 @@ class TrucoGame:
         
         if action_played in envido_actions:
             if self.round == 0:
-                self.envido.take_action(player, action_played)
+                if not self.truco.is_truco_active():
+                    self.envido.take_action(player, action_played) 
+                else:
+                    logging.warn(f"{player}: Envido can only be played before Truco.")
             else:
                 logging.warning(f"{player}: Envido can only be played in the first round")
         elif action_played in truco_actions:
