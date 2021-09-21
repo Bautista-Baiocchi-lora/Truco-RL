@@ -115,16 +115,19 @@ class Envido:
         return is_wager_active(self.envido_calls)
 
     def take_action(self, player, action_played):
-        if len(self.envido_calls) == 0 and self.game.player_next() == player:
-            self.envido_calls.append((player, action_played))
-            logging.info(f"{player} called {action_played}.")
-            self.envido_next = self.game.get_opponent(player)
-        elif self.envido_calls[-1][0] != player and self.is_valid_envido_state(action_played):
-            self.envido_calls.append((player, action_played))
-            logging.info(f"{player} called {action_played}")
-            self.switch_envido_turn()
+        if self.is_valid_envido_state(action_played):
+            if len(self.envido_calls) == 0 and self.game.get_mano() == player:
+                self.envido_calls.append((player, action_played))
+                logging.info(f"{player} called {action_played}.")
+                self.envido_next = self.game.get_opponent(player)
+            elif self.is_envido_active() and self.envido_calls[-1][0] != player:
+                self.envido_calls.append((player, action_played))
+                logging.info(f"{player} called {action_played}")
+                self.switch_envido_turn()
+            else:
+                logging.warn(f"{player} can't call {action_played}. Not Your Turn.")
         else:
-            logging.warn(f"{player} can't call {action_played}.")
+            logging.warn(f"{player} can't call {action_played}. Invalid Envido State.")
 
     def take_terminal_action(self, player, action_played):
         self.envido_calls.append((player, action_played))

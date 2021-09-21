@@ -55,24 +55,27 @@ class Truco:
         self.truco_next = self.game.get_opponent(self.truco_next)
 
     def take_action(self, player, action_played):
-        if not self.is_truco_started() and action_played == "truco":
-            self.truco_calls.append((player,action_played))
-            logging.info(f"{player} called {action_played}")
-            self.truco_next = self.game.get_opponent(player)
-        elif self.is_truco_started() and self.is_valid_truco_state(action_played):
-            if self.is_truco_active() and self.truco_next == player:
-                self.truco_calls.append((player, action_played))
+        if self.is_valid_truco_state(action_played):
+            if not self.is_truco_started() and action_played == "truco" and self.game.get_mano() == player:
+                self.truco_calls.append((player,action_played))
                 logging.info(f"{player} called {action_played}")
                 self.truco_next = self.game.get_opponent(player)
-            elif self.has_retruco == player:
-                self.truco_calls.append((player, action_played))
-                logging.info(f"{player} called {action_played}")
-                self.truco_next = self.game.get_opponent(player)
-                self.has_retruco = self.truco_next 
+            elif self.is_truco_active():
+                if self.truco_next == player:
+                    self.truco_calls.append((player, action_played))
+                    logging.info(f"{player} called {action_played}")
+                    self.truco_next = self.game.get_opponent(player)
+                elif self.has_retruco == player:
+                    self.truco_calls.append((player, action_played))
+                    logging.info(f"{player} called {action_played}")
+                    self.truco_next = self.game.get_opponent(player)
+                    self.has_retruco = self.truco_next 
+                else:
+                    logging.warning(f"{player} can't call {action_played}. Not your turn.")
             else:
-                logging.warning(f"{player} can't call {action_played}.")
+                logging.warning(f"{player} can't call {action_played}. Truco Not Active")
         else:
-            logging.warning(f"{player} can't call {action_played}.")
+            logging.warn(f"{player} can't call {action_played}. Invalid Truco State.")
 
     def take_terminal_action(self, player, action_played):
         self.truco_calls.append((player, action_played))

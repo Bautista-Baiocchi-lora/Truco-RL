@@ -42,7 +42,7 @@ class TrucoGame:
         else:
             return self.players[0]
     
-    def player_next(self):
+    def get_mano(self):
         return self.card_game.card_next
         
     def finish_hand(self):
