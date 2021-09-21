@@ -1,5 +1,6 @@
 from wager import is_valid_state, is_wager_active, get_wager_reward, is_wager_finished, is_wager_started
-import numpy as np
+import logging
+
 
 truco_states = [
     (['truco', 'quiero'], 2),
@@ -56,31 +57,31 @@ class Truco:
     def take_action(self, player, action_played):
         if not self.is_truco_started() and action_played == "truco":
             self.truco_calls.append((player,action_played))
-            print(f"{player} called {action_played}")
+            logging.info(f"{player} called {action_played}")
             self.truco_next = self.game.get_opponent(player)
         elif self.is_truco_started() and self.is_valid_truco_state(action_played):
             if self.is_truco_active() and self.truco_next == player:
                 self.truco_calls.append((player, action_played))
-                print(f"{player} called {action_played}")
+                logging.info(f"{player} called {action_played}")
                 self.truco_next = self.game.get_opponent(player)
             elif self.has_retruco == player:
                 self.truco_calls.append((player, action_played))
-                print(f"{player} called {action_played}")
+                logging.info(f"{player} called {action_played}")
                 self.truco_next = self.game.get_opponent(player)
                 self.has_retruco = self.truco_next 
             else:
-                print(f"{player} can't call {action_played}.")
+                logging.warning(f"{player} can't call {action_played}.")
         else:
-            print(f"{player} can't call {action_played}.")
+            logging.warning(f"{player} can't call {action_played}.")
 
     def take_terminal_action(self, player, action_played):
         self.truco_calls.append((player, action_played))
-        print(f"{player} called {action_played} truco")
+        logging.info(f"{player} called {action_played} truco")
         if action_played == "no quiero":
             opponent = self.game.get_opponent(player)
             reward = self.get_truco_reward()
             self.game.update_score(opponent, reward)
-            print(f"{opponent} was rewarded {reward} for winning truco.")
+            logging.debug(f"{opponent} was rewarded {reward} for winning truco.")
             self.game.finish_hand()
         else:
             #No response needed
@@ -90,8 +91,8 @@ class Truco:
     def fold(self, player):
         if self.is_truco_active():
             self.truco_calls.append((player, 'no quiero'))
-        print(f"{player} forfeited truco")
+        logging.debug(f"{player} forfeited truco")
         opponent = self.game.get_opponent(player)
         reward = self.get_truco_reward()
         self.game.update_score(opponent, reward)
-        print(f"{opponent} was rewarded {reward} for winning truco.")
+        logging.debug(f"{opponent} was rewarded {reward} for winning truco.")

@@ -6,13 +6,16 @@ from actions import game_actions, envido_actions, truco_actions, response_action
 from truco import Truco
 from card_game import CardGame
 
+import logging
 
-class TrucoHand:
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+
+class TrucoGame:
     
     
     def __init__(self, players, goes_first=0):
         '''
-        Initialize a Hand of Truco.
+        Initialize a Game of Truco.
         '''
         self.players = players
         self.finished = False
@@ -29,7 +32,6 @@ class TrucoHand:
             self.scoreboard[0][1] += score
         else:
             self.scoreboard[1][1] += score
-    
         
     def get_opponent(self, player):
         if player == self.players[0]:
@@ -41,8 +43,8 @@ class TrucoHand:
     def finish_hand(self):
         self.finished = True
         print("Hand finished.")
-        print(f"{self.scoreboard[0][0]} scored {self.scoreboard[0][1]}")
-        print(f"{self.scoreboard[1][0]} scored {self.scoreboard[1][1]}")
+        logging.info(f"{self.scoreboard[0][0]} scored {self.scoreboard[0][1]}")
+        logging.info(f"{self.scoreboard[1][0]} scored {self.scoreboard[1][1]}")
     
     def finish_round(self):
         self.round += 1
@@ -52,20 +54,20 @@ class TrucoHand:
         comparison = first_played[1].tier - second_played[1].tier
         if comparison >= 0:
             self.card_game.switch_card_turn() # switch if second person wins round
-            print(f"{self.card_next} won the round. They will start the next.")
-            
-        print("Round finished")
+            logging.debug(f"{self.second_played[0]} won the round. They will start the next one.")
         
         winner = self.card_game.get_card_winner()
         if winner is not None: 
             if self.truco.is_truco_started():
                 reward = self.truco.get_truco_reward()
                 self.update_score(winner, reward)
-                print(f"{winner} was rewarded {reward} for winning truco.")
+                logging.debug(f"{winner} was rewarded {reward} for winning truco.")
             else:
                 self.update_score(winner, 1)
-                print(f"{winner} was rewarded 1 for winning hand.")
+                logging.debug(f"{winner} was rewarded 1 for winning hand.")
             self.finish_hand()
+        else:
+            logging.debug("Round finished")
         
     def take_action(self, player, action):
         action_played = game_actions[action] if isinstance(action, numbers.Number) else action
@@ -74,29 +76,29 @@ class TrucoHand:
             if self.round == 0:
                 self.envido.take_action(player, action_played)
             else:
-                print(f"{player}: Envido can only be played in the first round")
+                logging.warning(f"{player}: Envido can only be played in the first round")
         elif action_played in truco_actions:
             if not self.envido.is_envido_active():
                 self.truco.take_action(player, action_played)
             else:
-                print(f"{player} can't call {action_played} unless envido has finished.")
+                logging.warning(f"{player} can't call {action_played} unless envido has finished.")
         elif action_played in response_actions:
             if self.envido.is_envido_active() and self.envido.is_valid_envido_state(action_played):
                 self.envido.take_terminal_action(player, action_played)
             elif self.truco.is_truco_active() and self.truco.is_valid_truco_state(action_played):
                 self.truco.take_terminal_action(player, action_played)
             else:
-                print(f"{player} can't call {action_played} right now.")
+                logging.warning(f"{player} can't call {action_played} right now.")
         elif action_played in playable_cards:
             if not self.envido.is_envido_active():
                 if not self.truco.is_truco_active():
                     self.card_game.take_action(player, action_played)
                 else:
-                    print(f"{player} can't play the card {action_played} before responding to truco.")
+                    logging.warning(f"{player} can't play the card {action_played} before responding to truco.")
             else:
-                print(f"{player} can't play the card {action_played} before responding to envido.")
+                logging.warning(f"{player} can't play the card {action_played} before responding to envido.")
         elif action_played == "fold":
-            print(f"{player} folded.")
+            logging.info(f"{player} folded.")
             if self.envido.is_envido_active():
                self.envido.fold(player)
             if self.truco.is_truco_started():
@@ -104,7 +106,7 @@ class TrucoHand:
             else:
                 opponent = self.get_opponent(player)
                 self.update_score(opponent, 1)
-                print(f"{opponent} was rewarded 1 for winning hand.")
+                logging.debug(f"{opponent} was rewarded 1 for winning hand.")
             self.finish_hand()
             
         

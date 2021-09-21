@@ -1,4 +1,5 @@
 from more_itertools import locate
+import logging
 
 class CardGame:
 
@@ -52,12 +53,12 @@ class CardGame:
         if len(card_played_indexes) == 1:
             card_played = player.hand.pop(card_played_indexes[0])
             self.cards_played.append((player, card_played))
-            print(f"{player} played {card_played}")
+            logging.info(f"{player} played {card_played}")
             if len(self.cards_played) % 2 == 0:
                 self.game.finish_round()
             else:
                 self.switch_card_turn()
         elif len(card_played_indexes) > 1:
-            print(f"{player}: card_played_indexes should never be > 1. Current value: {card_played_indexes}")
+            logging.critical(f"{player}: card_played_indexes should never be > 1. Current value: {card_played_indexes}")
         else:
-            print(f"{player} can't play the card {action_played}. They don't have it.")
+            logging.warning(f"{player} can't play the card {action_played}. They don't have it.")

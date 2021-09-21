@@ -1,5 +1,6 @@
 from wager import is_valid_state, is_wager_active, get_wager_reward, is_wager_finished
 import numpy as np
+import logging
 
 
 envido_states = [
@@ -68,6 +69,15 @@ class Envido:
         self.finished = False
         self.envido_next = None
         self.envido_calls = [] 
+    
+    def get_state(self):
+        state = np.array(
+            [
+                
+            ]
+        )
+
+        return state
 
     def get_envido_winner(self):    
         p1_cards = np.concatenate(([card for player, card in self.game.cards_played if player == self.game.first_move_by], self.game.first_move_by.hand))
@@ -76,8 +86,8 @@ class Envido:
         p1_envido = calculate_envido(p1_cards)
         p2_envido = calculate_envido(p2_cards)
         
-        print(f"{self.game.first_move_by} has an envido of {p1_envido}")
-        print(f"{self.game.second_move_by} has an envido of {p2_envido}")
+        logging.debug(f"{self.game.first_move_by} has an envido of {p1_envido}")
+        logging.debug(f"{self.game.second_move_by} has an envido of {p2_envido}")
         
         return self.game.first_move_by if p1_envido >= p2_envido else self.game.second_move_by
 
@@ -108,38 +118,38 @@ class Envido:
         if not self.game.is_truco_active():
             if len(self.envido_calls) == 0:
                 self.envido_calls.append((player, action_played))
-                print(f"{player} called {action_played}.")
+                logging.info(f"{player} called {action_played}.")
                 self.envido_next = self.game.get_opponent(player)
             elif self.envido_calls[-1][0] != player and self.is_valid_envido_state(action_played):
                 self.envido_calls.append((player, action_played))
-                print(f"{player} called {action_played}")
+                logging.info(f"{player} called {action_played}")
                 self.switch_envido_turn()
             else:
-                print(f"{player} can't call {action_played}.")
+                logging.warn(f"{player} can't call {action_played}.")
         else:
-            print(f"{player}: Envido can only be played before Truco.")
+            logging.warn(f"{player}: Envido can only be played before Truco.")
 
     def take_terminal_action(self, player, action_played):
         self.envido_calls.append((player, action_played))
-        print(f"{player} called {action_played} envido")
+        logging.info(f"{player} called {action_played} envido")
         if action_played == "no quiero":
             opponent = self.game.get_opponent(player)
             reward = self.get_envido_reward()
             self.game.update_score(opponent, reward)
-            print(f"{opponent} was rewarded {reward} for winning envido.")
+            logging.debug(f"{opponent} was rewarded {reward} for winning envido.")
         else:
             winner = self.get_envido_winner()
             reward = self.get_envido_reward()
             self.game.update_score(winner, reward)
-            print(f"{winner} was rewarded {reward} for winning envido.")
+            logging.debug(f"{winner} was rewarded {reward} for winning envido.")
         # de-activate envido    
         self.envido_next = None
         self.finished = True
 
     def fold(self, player):
         self.envido_calls.append((player, 'no quiero'))
-        print(f"{player} forfeited envido")
+        logging.debug(f"{player} forfeited envido")
         opponent = self.game.get_opponent(player)
         reward = self.get_envido_reward()
         self.game.update_score(opponent, reward)
-        print(f"{opponent} was rewarded {reward} for winning envido.")
+        logging.debug(f"{opponent} was rewarded {reward} for winning envido.")
