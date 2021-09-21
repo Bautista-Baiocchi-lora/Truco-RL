@@ -42,6 +42,8 @@ class TrucoGame:
         else:
             return self.players[0]
     
+    def player_next(self):
+        return self.card_game.card_next
         
     def finish_hand(self):
         self.finished = True
@@ -90,7 +92,10 @@ class TrucoGame:
                 logging.warning(f"{player} can't call {action_played} unless envido has finished.")
         elif action_played in response_actions:
             if self.envido.is_envido_active() and self.envido.is_valid_envido_state(action_played):
-                self.envido.take_terminal_action(player, action_played)
+                if self.envido.envido_next == player:
+                    self.envido.take_terminal_action(player, action_played) 
+                else:
+                    logging.warning(f"{player} can't call {action_played} envido for others.")
             elif self.truco.is_truco_active() and self.truco.is_valid_truco_state(action_played):
                 self.truco.take_terminal_action(player, action_played)
             else:

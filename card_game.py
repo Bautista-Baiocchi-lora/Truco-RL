@@ -16,43 +16,44 @@ class CardGame:
         p0_cards = [card for player, card in self.cards_played if player == self.game.first_move_by]
         p1_cards = [card for player, card in self.cards_played if player == self.game.second_move_by]
         
-        p0_wins=0
-        p1_wins=0
-        tie_exists = False
+        results = []
         for c1, c2 in zip(p0_cards, p1_cards):
-            if p0_wins >= 2 or p1_wins >= 2:
-                break
-                
             comparison = c1.tier - c2.tier
             if comparison > 0:
-                p0_wins += 1
-                if tie_exists:
-                    break
+                results.append('p0')
             elif comparison < 0:
-                p1_wins += 1
-                if tie_exists:
-                    break
+                results.append('p1')
             elif comparison == 0:
-                if p0_wins > p1_wins:
-                    p1_wins += 1
-                    break
-                elif p1_wins > p0_wins:
-                    p1_wins += 1
-                    break
-                else:
-                    tie_exists = True
+                results.append('tie')
                     
-            logging.debug(f"p0_wins: {p0_wins} | p1_wins: {p1_wins} | tie_exists: {tie_exists}")
+        if len(results) < 2:
+            return None
             
-        # incase of tie on last card
-        if (p0_wins + p1_wins) > 0 and p0_wins == p1_wins and tie_exists:
-            return self.game.first_move_by
+        from collections import Counter
         
-        # incase of tie on all 3 cards
-        if p0_wins == 0 and p1_wins == 0 and tie_exists:
+        counts = Counter(results)
+        
+        if 'tie' in counts:
+            if results[0] == 'tie':
+                if results[1] == 'tie':
+                    if len(results) == 3:
+                        return self.game.first_move_by if results[2] == 'tie' or results[2] == 'p0' else self.game.second_move_by
+                    else:
+                        return None
+                else:
+                    return self.game.first_move_by if results[1] == 'p0' else self.game.second_move_by
+            elif results[1] == 'tie':
+                return self.game.first_move_by if results[0] == 'p0' else self.game.second_move_by
+            elif len(results) == 3 and results[2] == 'tie':
+                return self.game.first_move_by if  results[0] == 'p0' else self.game.second_move_by
+            else:
+                return None
+        elif 'p0' not in counts:
+            return self.game.second_move_by
+        elif 'p1' not in counts:
             return self.game.first_move_by
-                
-        return self.game.first_move_by if p0_wins >= p1_wins else self.game.second_move_by
+        else:
+            return self.game.first_move_by if counts['p0'] > counts['p1'] else self.game.second_move_by
 
     
     def switch_card_turn(self):

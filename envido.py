@@ -115,7 +115,7 @@ class Envido:
         return is_wager_active(self.envido_calls)
 
     def take_action(self, player, action_played):
-        if len(self.envido_calls) == 0:
+        if len(self.envido_calls) == 0 and self.game.player_next() == player:
             self.envido_calls.append((player, action_played))
             logging.info(f"{player} called {action_played}.")
             self.envido_next = self.game.get_opponent(player)
