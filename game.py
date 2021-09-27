@@ -26,6 +26,14 @@ class TrucoGame:
         self.envido = Envido(self)
         self.truco = Truco(self)
         self.card_game = CardGame(self, self.first_move_by)
+
+    def get_state(self):
+        state = np.array()
+        
+        cards = []
+        for player in self.players:
+            cards = cards + player.hand
+
     
     def get_cards_played(self):
         return self.card_game.cards_played
@@ -119,6 +127,10 @@ class TrucoGame:
                 self.update_score(opponent, 1)
                 logging.debug(f"{opponent} was rewarded 1 for winning hand.")
             self.finish_hand()
+
+        state = None
+
+        return state
             
         
             
