@@ -4,6 +4,7 @@ import numpy as np
 from envido import Envido
 from actions import game_actions, envido_actions, truco_actions, response_actions, playable_cards
 from truco import Truco
+from card_utils import encode_card_array, encode_envido, encode_truco
 from card_game import CardGame
 
 import logging
@@ -27,13 +28,59 @@ class TrucoGame:
         self.truco = Truco(self)
         self.card_game = CardGame(self, self.first_move_by)
 
-    def get_state(self):
-        state = np.array()
+    def get_state(self, player):
+        player_cards = np.array(encode_card_array(player.hand))
         
-        cards = []
-        for player in self.players:
-            cards = cards + player.hand
-
+        started =  1 if player == self.first_move_by else 0
+        mano = 1 if player == self.get_mano() else 0
+        game_config = np.array([started, mano])
+        
+        score = []
+        for p, s in self.scoreboard:
+            p_id = 1 if player == p else 0
+            turn = [p_id, s]
+            score.append(np.array(turn, dtype=np.int8))
+        
+        score = np.hstack(score)
+        
+        cards_played = []
+        for p, c in self.card_game.cards_played:
+            p_id = 1 if player == p else 0
+            turn = [p_id, *encode_card_array(c)]
+            cards_played.append(np.array(turn, dtype=np.int8))
+        
+        # Add padding for 6 turns
+        for i in range(6 - len(cards_played)):
+            cards_played.append(np.zeros(1 + 40, dtype=np.int8))
+            
+        cards_played = np.hstack(cards_played)
+        
+        envido_state = []
+        for p, c in self.envido.envido_calls:
+            p_id = 1 if player == p else 0
+            turn = [p_id, *encode_envido(c)]
+            envido_state.append(np.array(turn, dtype=np.int8))
+        
+        # Add padding 3 calls
+        for i in range(3 - len(envido_state)):
+            envido_state.append(np.zeros(1 + 4, dtype=np.int8))
+            
+        envido_state = np.hstack(envido_state)
+            
+        truco_state = []
+        for p, c in self.truco.truco_calls:
+            p_id = 1 if player == p else 0
+            turn = [p_id, *encode_truco(c)]
+            truco_state.append(np.array(turn, dtype = np.int8))
+            
+        # Add padding 5 calls
+        for i in range(5 - len(truco_state)):
+            truco_state.append(np.zeros(1 + 5, dtype=np.int8))
+            
+        truco_state = np.hstack(truco_state)
+            
+        return np.concatenate((game_config, player_cards, score, cards_played, envido_state, truco_state))
+        
     
     def get_cards_played(self):
         return self.card_game.cards_played
