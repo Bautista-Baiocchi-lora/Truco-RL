@@ -1,6 +1,7 @@
-from wager import is_valid_state, is_wager_active, get_wager_reward, is_wager_finished, is_wager_started
+from wager import is_valid_wager_state, is_wager_active, get_wager_reward, is_wager_finished, is_wager_started
 import logging
-
+import numpy as np
+from card_utils import encode_truco
 
 truco_states = [
     (['truco', 'quiero'], 2),
@@ -31,36 +32,49 @@ class Truco:
         self.truco_next = None
         self.has_retruco = None
         self.truco_calls = []
+        
+    def get_state(self, player):
+        state = []
+        for p, c in self.truco_calls:
+            p_id = 1 if player == p else 0
+            turn = [p_id, *encode_truco(c)]
+            state.append(np.array(turn, dtype = np.int8))
+            
+        # Add padding 5 calls
+        for i in range(5 - len(state)):
+            state.append(np.zeros(1 + 5, dtype=np.int8))
+            
+        return state
 
 
-    def get_truco_reward(self):
+    def get_reward(self):
         return get_wager_reward(truco_states, self.truco_calls)
         
-    def is_truco_started(self):
+    def is_started(self):
         return is_wager_started(self.truco_calls)
 
-    def is_truco_active(self):
+    def is_active(self):
         return is_wager_active(self.truco_calls)
 
 
-    def is_valid_truco_state(self, action):
-        return is_valid_state(truco_states, self.truco_calls, action)
+    def is_valid_state(self, action):
+        return is_valid_wager_state(truco_states, self.truco_calls, action)
     
 
-    def is_truco_finished(self):
+    def is_finished(self):
         return is_wager_finished(self.truco_calls)
     
           
-    def switch_truco_turn(self):
+    def switch_turn(self):
         self.truco_next = self.game.get_opponent(self.truco_next)
 
     def take_action(self, player, action_played):
-        if self.is_valid_truco_state(action_played):
-            if not self.is_truco_started() and action_played == "truco" and self.game.get_mano() == player:
+        if self.is_valid_state(action_played):
+            if not self.is_started() and action_played == "truco" and self.game.get_mano() == player:
                 self.truco_calls.append((player,action_played))
                 logging.info(f"{player} called {action_played}")
                 self.truco_next = self.game.get_opponent(player)
-            elif self.is_truco_active():
+            elif self.is_active():
                 if self.truco_next == player:
                     self.truco_calls.append((player, action_played))
                     logging.info(f"{player} called {action_played}")
@@ -82,7 +96,7 @@ class Truco:
         logging.info(f"{player} called {action_played} truco")
         if action_played == "no quiero":
             opponent = self.game.get_opponent(player)
-            reward = self.get_truco_reward()
+            reward = self.get_reward()
             self.game.update_score(opponent, reward)
             logging.debug(f"{opponent} was rewarded {reward} for winning truco.")
             self.game.finish_hand()
@@ -92,10 +106,10 @@ class Truco:
             self.truco_next = None
     
     def fold(self, player):
-        if self.is_truco_active():
+        if self.is_active():
             self.truco_calls.append((player, 'no quiero'))
         logging.debug(f"{player} forfeited truco")
         opponent = self.game.get_opponent(player)
-        reward = self.get_truco_reward()
+        reward = self.get_reward()
         self.game.update_score(opponent, reward)
         logging.debug(f"{opponent} was rewarded {reward} for winning truco.")

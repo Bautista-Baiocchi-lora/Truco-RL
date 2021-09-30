@@ -1,6 +1,7 @@
 import numpy as np
+    
 
-def is_valid_state(all_states, current_state, action):
+def is_valid_wager_state(all_states, current_state, action):
     raw_state = np.append([call for player, call in current_state], action)
     
     for state, score in all_states:

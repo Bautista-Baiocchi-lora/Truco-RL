@@ -1,5 +1,8 @@
 from more_itertools import locate
+import numpy as np
 import logging
+
+from card_utils import encode_card_array
 
 class CardGame:
 
@@ -11,8 +14,26 @@ class CardGame:
         self.finished = False
         self.card_next = goes_first
         self.cards_played = []
+        
+    def get_state(self, player):
+        state = []
+        for p, c in self.cards_played:
+            p_id = 1 if player == p else 0
+            turn = [p_id, *encode_card_array(c)]
+            state.append(np.array(turn, dtype=np.int8))
+        
+        # Add padding for 6 turns
+        for i in range(6 - len(state)):
+            state.append(np.zeros(1 + 40, dtype=np.int8))
+            
+        return state
+    
+    def get_legal_actions(self, player):
+        if self.card_next == player:
+            return [card.get_index() for card in player.hand]
+        return []
 
-    def get_card_winner(self):
+    def get_winner(self):
         p0_cards = [card for player, card in self.cards_played if player == self.game.first_move_by]
         p1_cards = [card for player, card in self.cards_played if player == self.game.second_move_by]
         
@@ -56,7 +77,7 @@ class CardGame:
             return self.game.first_move_by if counts['p0'] > counts['p1'] else self.game.second_move_by
 
     
-    def switch_card_turn(self):
+    def switch_turn(self):
         self.card_next = self.game.get_opponent(self.card_next)
 
     def take_action(self, player, action_played):
@@ -72,7 +93,7 @@ class CardGame:
             if len(self.cards_played) % 2 == 0:
                 self.game.finish_round()
             else:
-                self.switch_card_turn()
+                self.switch_turn()
         elif len(card_played_indexes) > 1:
             logging.critical(f"{player}: card_played_indexes should never be > 1. Current value: {card_played_indexes}")
         else:
