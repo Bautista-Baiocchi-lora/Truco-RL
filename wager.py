@@ -13,7 +13,7 @@ def is_valid_wager_state(all_states, current_state, action):
     return False
 
 def is_wager_finished(current_state):
-    return len(current_state) > 0 and current_state[-1][1] == 'quiero' or current_state[-1][1] ==  'no quiero'
+    return len(current_state) > 0 and (current_state[-1][1] == 'quiero' or current_state[-1][1] ==  'no quiero')
 
 def is_wager_started(current_state):
     return len(current_state) > 0

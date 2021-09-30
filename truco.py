@@ -45,6 +45,20 @@ class Truco:
             state.append(np.zeros(1 + 5, dtype=np.int8))
             
         return state
+    
+    def get_legal_actions(self, player):
+        if self.truco_next == player or self.has_retruco == player:
+            raw_state = [call for player, call in self.truco_calls]
+    
+            legal_actions = []
+            for state, val in truco_states:
+                if state[:len(raw_state)] == raw_state:
+                    legal_actions.append(state[len(raw_state)])
+
+            return list(dict.fromkeys(legal_actions))
+        elif not self.is_started():
+            return ['truco']
+        return []
 
 
     def get_reward(self):
@@ -72,22 +86,19 @@ class Truco:
         if self.is_valid_state(action_played):
             if not self.is_started() and action_played == "truco" and self.game.get_mano() == player:
                 self.truco_calls.append((player,action_played))
+                logging.info(f"{player} called {action_played} to start truco")
+                self.truco_next = self.game.get_opponent(player)
+            elif self.is_active() and self.truco_next == player:
+                self.truco_calls.append((player, action_played))
                 logging.info(f"{player} called {action_played}")
                 self.truco_next = self.game.get_opponent(player)
-            elif self.is_active():
-                if self.truco_next == player:
-                    self.truco_calls.append((player, action_played))
-                    logging.info(f"{player} called {action_played}")
-                    self.truco_next = self.game.get_opponent(player)
-                elif self.has_retruco == player:
-                    self.truco_calls.append((player, action_played))
-                    logging.info(f"{player} called {action_played}")
-                    self.truco_next = self.game.get_opponent(player)
-                    self.has_retruco = self.truco_next 
-                else:
-                    logging.warning(f"{player} can't call {action_played}. Not your turn.")
+            elif self.has_retruco == player and action_played == "re-truco":
+                self.truco_calls.append((player, action_played))
+                logging.info(f"{player} called {action_played} for re-truco")
+                self.truco_next = self.game.get_opponent(player)
+                self.has_retruco = None 
             else:
-                logging.warning(f"{player} can't call {action_played}. Truco Not Active")
+                logging.warning(f"{player} can't call {action_played}. Not your turn.")
         else:
             logging.warn(f"{player} can't call {action_played}. Invalid Truco State.")
 
@@ -101,8 +112,11 @@ class Truco:
             logging.debug(f"{opponent} was rewarded {reward} for winning truco.")
             self.game.finish_hand()
         else:
-            #No response needed
-            self.has_retruco = player
+            #is re-truco possible ?
+            if self.has_retruco is None:
+                self.has_retruco = player
+            else:
+                self.has_retruco = None
             self.truco_next = None
     
     def fold(self, player):

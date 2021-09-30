@@ -61,10 +61,10 @@ class TrucoGame:
             return []
         elif self.envido.is_active():
             return self.envido.get_legal_actions(player)
-        elif self.truco.is_active():
-            return []
+        elif self.truco.is_active() or (self.truco.is_finished() and self.truco.has_retruco == player):
+            return self.truco.get_legal_actions(player)
         
-        return self.envido.get_legal_actions(player), self.card_game.get_legal_actions(player)
+        return np.hstack((self.envido.get_legal_actions(player), self.truco.get_legal_actions(player), self.card_game.get_legal_actions(player)))
             
     
     def get_cards_played(self):
@@ -87,6 +87,8 @@ class TrucoGame:
             return self.envido.envido_next
         elif self.truco.truco_next is not None:
             return self.truco.truco_next
+        elif self.truco.has_retruco is not None:
+            return self.truco.has_retruco
         return self.card_game.card_next
         
     def finish_hand(self):
@@ -119,6 +121,10 @@ class TrucoGame:
             logging.debug("Round finished")
         
     def take_action(self, player, action):
+        if self.get_mano() != player:
+            logging.warning(f"{player}: Can't play out of turn.")
+            return 
+        
         action_played = game_actions[action] if isinstance(action, numbers.Number) else action
         
         if action_played in envido_actions:
