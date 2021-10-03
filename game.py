@@ -161,7 +161,7 @@ class TrucoGame:
         elif action_played == "fold":
             logging.info(f"{player} folded.")
             if self.envido.is_active():
-               self.envido.fold(player)
+                self.envido.fold(player)
             if self.truco.is_started():
                 self.truco.fold(player)
             else:

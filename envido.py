@@ -82,8 +82,10 @@ class Envido:
         # Add padding 3 calls
         for i in range(3 - len(state)):
             state.append(np.zeros(1 + 4, dtype=np.int8))
-
-        return state
+            
+        envidos = np.array([self.calculate_player_envido(player), self.calculate_player_envido(self.game.get_opponent(player))])
+            
+        return state, envidos
     
     
     def get_legal_actions(self, player):
@@ -99,13 +101,14 @@ class Envido:
         elif not self.is_started():
             return ['envido', 'real envido']
         return []
+    
+    def calculate_player_envido(self, player):
+        cards = np.concatenate(([c for p, c in self.game.get_cards_played() if player == p], player.hand))
+        return calculate_envido(cards)
 
     def get_winner(self):    
-        p1_cards = np.concatenate(([card for player, card in self.game.get_cards_played() if player == self.game.first_move_by], self.game.first_move_by.hand))
-        p2_cards = np.concatenate(([card for player, card in self.game.get_cards_played() if player == self.game.second_move_by], self.game.second_move_by.hand))
-        
-        p1_envido = calculate_envido(p1_cards)
-        p2_envido = calculate_envido(p2_cards)
+        p1_envido = self.calculate_player_envido(self.game.first_move_by)
+        p2_envido = self.calculate_player_envido(self.game.second_move_by)
         
         logging.debug(f"{self.game.first_move_by} has an envido of {p1_envido}")
         logging.debug(f"{self.game.second_move_by} has an envido of {p2_envido}")
