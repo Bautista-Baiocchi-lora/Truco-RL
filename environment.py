@@ -1,6 +1,7 @@
 import torch
 from game import TrucoGame
 import logging
+import random
 from actions import game_actions
 
 
@@ -37,11 +38,11 @@ class TrucoEnvironment:
         winner = self.game.get_winner()
         if winner is not None:
             self.games_won = [(p, wins + 1) if p == winner else (p, wins) for p, wins in self.games_won]
-            self.games_played += 1
+            self.games_played = self.games_won[0][1] + self.games_won[1][1]
         else:
             logging.warn("Game ended with no winner.")
             
-        self.game = TrucoGame(self.players)
+        self.game = TrucoGame(self.players, goes_first=random.getrandbits(1))
         
         first_move_by = self.game.get_mano()
         
