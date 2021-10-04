@@ -1,6 +1,6 @@
-import torch
 from game import TrucoGame
 import logging
+import numpy as np
 import random
 from actions import game_actions
 
@@ -10,14 +10,14 @@ logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s -
 def encode_game_state(player, game):
     state = game.get_state(player)
 
-    game_t = torch.tensor(state['game']).reshape(-1).squeeze()
-    score_t = torch.tensor(state['score']).reshape(-1).squeeze()
-    player_cards_t = torch.tensor(state['player_cards']).reshape(-1).squeeze()
-    cards_played_t = torch.tensor(state['cards_played']).reshape(-1).squeeze()
-    envido_state_t = torch.cat((torch.tensor(state['envido_state'][0]).reshape(-1).squeeze(), torch.tensor(state['envido_state'][1])))
-    truco_state_t = torch.tensor(state['truco_state']).reshape(-1).squeeze()
+    game = np.array(state['game']).reshape(-1).squeeze()
+    score = np.array(state['score']).reshape(-1).squeeze()
+    player_cards = np.array(state['player_cards']).reshape(-1).squeeze()
+    cards_played = np.array(state['cards_played']).reshape(-1).squeeze()
+    envido_state = np.concatenate((np.array(state['envido_state'][0]).reshape(-1).squeeze(), np.array(state['envido_state'][1])))
+    truco_state = np.array(state['truco_state']).reshape(-1).squeeze()
 
-    return torch.cat((game_t, score_t, player_cards_t, cards_played_t, envido_state_t, truco_state_t)).type(torch.FloatTensor)
+    return np.concatenate((game, score, player_cards, cards_played, envido_state, truco_state)).astype(np.float32)
 
 class TrucoEnvironment:
 
