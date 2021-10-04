@@ -16,7 +16,7 @@ def encode_game_state(player, game):
     envido_state_t = torch.cat((torch.tensor(state['envido_state'][0]).reshape(-1).squeeze(), torch.tensor(state['envido_state'][1])))
     truco_state_t = torch.tensor(state['truco_state']).reshape(-1).squeeze()
 
-    return torch.cat((game_t, score_t, player_cards_t, cards_played_t, envido_state_t, truco_state_t)).type(torch.CharTensor)
+    return torch.cat((game_t, score_t, player_cards_t, cards_played_t, envido_state_t, truco_state_t)).type(torch.FloatTensor)
 
 class TrucoEnvironment:
 
