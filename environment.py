@@ -25,12 +25,21 @@ class TrucoEnvironment:
         self.action_space_dim=game_actions.shape[0]
         self.state_space_dim=encode_game_state(self.game.get_mano(), self.game).shape[0]
         self.players = players
+        self.games_won = [(p, 0) for p in players]
+        self.games_played = 0
 
     def reset(self): 
         logging.info("New Game.")
         # Clear player cards
         for player in self.players:
             player.hand.clear()
+            
+        winner = self.game.get_winner()
+        if winner is not None:
+            self.games_won = [(p, wins + 1) if p == winner else (p, wins) for p, wins in self.games_won]
+            self.games_played += 1
+        else:
+            logging.warn("Game ended with no winner.")
             
         self.game = TrucoGame(self.players)
         
@@ -53,5 +62,4 @@ class TrucoEnvironment:
                 reward -= (new_score[i][1] - old_score[i][1])
         
         return reward, 1 if self.game.finished else 0, next_player, self.game.get_legal_actions(next_player), encode_game_state(next_player, self.game)
-
-            
+        

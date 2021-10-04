@@ -56,6 +56,15 @@ class TrucoGame:
         }
             
         return state
+    
+    def get_winner(self):
+        if self.finished:
+            if self.scoreboard[0][1] >= self.scoreboard[1][1]:
+                return self.scoreboard[0][0]
+            else:
+                return self.scoreboard[1][0]
+            
+        return None
         
     def get_legal_actions(self, player):
         if self.get_mano() != player:
