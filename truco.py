@@ -52,7 +52,7 @@ class Truco:
     
             legal_actions = []
             for state, val in truco_states:
-                if state[:len(raw_state)] == raw_state:
+                if state[:len(raw_state)] == raw_state and len(raw_state) < len(state):
                     legal_actions.append(state[len(raw_state)])
 
             return list(dict.fromkeys(legal_actions))
@@ -113,7 +113,7 @@ class Truco:
             self.game.finish_hand()
         else:
             #is re-truco possible ?
-            if self.has_retruco is None:
+            if self.has_retruco is None and [call for p, call in self.truco_calls].count('quiero') < 2 and [call for p, call in self.truco_calls].count('vale cuatro') == 0:
                 self.has_retruco = player
             else:
                 self.has_retruco = None

@@ -1,5 +1,6 @@
 import torch
 from game import TrucoGame
+import logging
 from actions import game_actions
 
 def encode_game_state(player, game):
@@ -22,13 +23,17 @@ class TrucoEnvironment:
         self.state_space_dim=encode_game_state(self.game.get_mano(), self.game).shape[0]
         self.players = players
 
-    def reset(self):
+    def reset(self): 
+        logging.info("New Game.")
         # Clear player cards
         for player in self.players:
             player.hand.clear()
             
         self.game = TrucoGame(self.players)
-        return self.game.get_mano(), encode_game_state(self.game.get_mano(), self.game)
+        
+        first_move_by = self.game.get_mano()
+        
+        return first_move_by, self.game.get_legal_actions(first_move_by), encode_game_state(first_move_by, self.game)
 
     def step(self, player, action):
         old_score = self.game.scoreboard.copy()
@@ -44,6 +49,6 @@ class TrucoEnvironment:
             else:
                 reward -= (new_score[i][1] - old_score[i][1])
         
-        return reward, self.game.get_legal_actions(next_player), encode_game_state(next_player, self.game)
+        return reward, self.game.finished, next_player, self.game.get_legal_actions(next_player), encode_game_state(next_player, self.game)
 
             

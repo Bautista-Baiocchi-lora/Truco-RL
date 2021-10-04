@@ -60,11 +60,11 @@ class TrucoGame:
         if self.get_mano() != player:
             return []
         elif self.envido.is_active():
-            return self.envido.get_legal_actions(player)
-        elif self.truco.is_active() or (self.truco.is_finished() and self.truco.has_retruco == player):
-            return self.truco.get_legal_actions(player)
+            return self.envido.get_legal_actions(player) + ['fold']
+        elif self.truco.is_active():
+            return self.truco.get_legal_actions(player) + ['fold']
         
-        return np.hstack((self.envido.get_legal_actions(player), self.truco.get_legal_actions(player), self.card_game.get_legal_actions(player)))
+        return np.hstack((self.envido.get_legal_actions(player), self.truco.get_legal_actions(player), self.card_game.get_legal_actions(player), ['fold']))
             
     
     def get_cards_played(self):
@@ -87,8 +87,6 @@ class TrucoGame:
             return self.envido.envido_next
         elif self.truco.truco_next is not None:
             return self.truco.truco_next
-        elif self.truco.has_retruco is not None:
-            return self.truco.has_retruco
         return self.card_game.card_next
         
     def finish_hand(self):
@@ -105,7 +103,7 @@ class TrucoGame:
         comparison = first_played[1].tier - second_played[1].tier
         if comparison >= 0:
             self.card_game.switch_turn() # switch if second person wins round
-            logging.debug(f"{second_played[0]} won the round. They will start the next one.")
+            logging.debug(f"{second_played[0]} won the round playing {str(second_played[1])}. They will start the next one.")
         
         winner = self.card_game.get_winner()
         if winner is not None: 
@@ -129,7 +127,7 @@ class TrucoGame:
         
         if action_played in envido_actions:
             if self.round == 0:
-                if not self.truco.is_active():
+                if not self.truco.is_started():
                     self.envido.take_action(player, action_played) 
                 else:
                     logging.warn(f"{player}: Envido can only be played before Truco.")

@@ -94,7 +94,7 @@ class Envido:
     
             legal_actions = []
             for state, val in envido_states:
-                if state[:len(raw_state)] == raw_state:
+                if state[:len(raw_state)] == raw_state and len(raw_state) < len(state):
                     legal_actions.append(state[len(raw_state)])
 
             return list(dict.fromkeys(legal_actions))
