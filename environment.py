@@ -52,6 +52,6 @@ class TrucoEnvironment:
             else:
                 reward -= (new_score[i][1] - old_score[i][1])
         
-        return reward, self.game.finished, next_player, self.game.get_legal_actions(next_player), encode_game_state(next_player, self.game)
+        return reward, 1 if self.game.finished else 0, next_player, self.game.get_legal_actions(next_player), encode_game_state(next_player, self.game)
 
             

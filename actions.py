@@ -27,3 +27,5 @@ playable_actions = np.concatenate((truco_actions, envido_actions, response_actio
 playable_cards = np.array([str(c) for c in init_truco_deck()])
 
 game_actions = np.concatenate((playable_actions, playable_cards))
+
+game_actions_list = game_actions.tolist()
