@@ -43,6 +43,8 @@ class Truco:
         # Add padding 5 calls
         for i in range(5 - len(state)):
             state.append(np.zeros(1 + 5, dtype=np.int8))
+        
+        state = np.vstack(state)
             
         return state
     

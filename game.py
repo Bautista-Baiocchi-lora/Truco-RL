@@ -35,17 +35,19 @@ class TrucoGame:
     def get_state(self, player):
         started =  1 if player == self.first_move_by else 0
         mano = 1 if player == self.get_mano() else 0
-        game_config = np.array([started, mano])
+        game_config = np.array([started, mano], dtype=np.int8)
         
         score = []
         for p, s in self.scoreboard:
             p_id = 1 if player == p else 0
             turn = [p_id, s]
-            score.append(np.array(turn, dtype=np.int8))
+            score.append(np.array(turn, dtype = np.int8))
+        
+        score = np.vstack(score)
             
         state = {
             'game': game_config,
-            'player_cards': encode_card_array(player.hand),
+            'player_cards': np.array(encode_card_array(player.hand), dtype=np.int8),
             'score': score,
             'cards_played': self.card_game.get_state(player),
             'envido_state': self.envido.get_state(player),

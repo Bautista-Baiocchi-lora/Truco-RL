@@ -26,6 +26,8 @@ class CardGame:
         for i in range(6 - len(state)):
             state.append(np.zeros(1 + 40, dtype=np.int8))
             
+        state = np.vstack(state)
+            
         return state
     
     def get_legal_actions(self, player):
