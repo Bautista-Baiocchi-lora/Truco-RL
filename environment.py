@@ -3,6 +3,9 @@ from game import TrucoGame
 import logging
 from actions import game_actions
 
+
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+
 def encode_game_state(player, game):
     state = game.get_state(player)
 

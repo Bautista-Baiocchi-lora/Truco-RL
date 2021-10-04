@@ -92,7 +92,7 @@ class Truco:
                 self.truco_calls.append((player, action_played))
                 logging.info(f"{player} called {action_played}")
                 self.truco_next = self.game.get_opponent(player)
-            elif self.has_retruco == player and action_played == "re-truco":
+            elif self.has_retruco == player and (action_played == "re-truco" or action_played == "vale cuatro"):
                 self.truco_calls.append((player, action_played))
                 logging.info(f"{player} called {action_played} for re-truco")
                 self.truco_next = self.game.get_opponent(player)

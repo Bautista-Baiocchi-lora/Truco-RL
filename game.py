@@ -10,7 +10,6 @@ from dealer import Dealer
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
 class TrucoGame:
     
@@ -60,11 +59,18 @@ class TrucoGame:
         if self.get_mano() != player:
             return []
         elif self.envido.is_active():
-            return self.envido.get_legal_actions(player) + ['fold']
+            return self.envido.get_legal_actions(player)  + ['fold']
         elif self.truco.is_active():
-            return self.truco.get_legal_actions(player) + ['fold']
+            return self.truco.get_legal_actions(player)  + ['fold']
         
-        return np.hstack((self.envido.get_legal_actions(player), self.truco.get_legal_actions(player), self.card_game.get_legal_actions(player), ['fold']))
+        aggregate = ['fold']
+        
+        if self.round == 0 and not self.truco.is_started():
+            aggregate.extend(self.envido.get_legal_actions(player))
+    
+        aggregate.extend(self.truco.get_legal_actions(player))
+        
+        return np.hstack((aggregate, self.card_game.get_legal_actions(player)))
             
     
     def get_cards_played(self):
