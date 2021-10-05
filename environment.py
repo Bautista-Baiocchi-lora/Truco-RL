@@ -27,7 +27,7 @@ class TrucoEnvironment:
         self.games_won = [(p, 0) for p in players]
         self.games_played = 0
 
-    def reset(self): 
+    def reset(self, force=False, goes_first=None): 
         logging.info("New Game.")
         # Clear player cards
         for player in self.players:
@@ -37,10 +37,10 @@ class TrucoEnvironment:
         if winner is not None:
             self.games_won = [(p, wins + 1) if p == winner else (p, wins) for p, wins in self.games_won]
             self.games_played = self.games_won[0][1] + self.games_won[1][1]
-        else:
+        elif force:
             logging.warn("Game ended with no winner.")
             
-        self.game = TrucoGame(self.players, goes_first=random.getrandbits(1))
+        self.game = TrucoGame(self.players, goes_first=goes_first if goes_first else random.getrandbits(1))
         
         first_move_by = self.game.get_mano()
         

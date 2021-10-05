@@ -6,6 +6,9 @@ import numpy as np
 from actions import game_actions_list
 import random
 
+def load_agent(name):
+    return T.load(f"./model_saves/model-v4-{name}.pt")
+
 class DQNetwork(nn.Module):
     
     def __init__(self, state_space_dim, action_space_dim):
@@ -154,3 +157,11 @@ class Agent:
         
     def save_reward(self, episode_reward):
         self.reward_buffer.append(episode_reward)
+        
+    def save_model(self, name=None):
+        name = self.get_name() if name is None else name
+        T.save(self.online_net.state_dict(), f"./model_saves/model-v4-{name}.pt")
+        print(f"Model {name} saved. \r")
+
+    def get_name(self):
+        return self.player.get_id()
