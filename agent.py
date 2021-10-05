@@ -6,8 +6,15 @@ import numpy as np
 from actions import game_actions_list
 import random
 
-def load_agent(name):
+def load_model(name):
     return T.load(f"./model_saves/model-v4-{name}.pt")
+
+def load_agent(name):
+    player = Player(name)
+    return Agent(player, model_name=name)
+    
+    
+
 
 class DQNetwork(nn.Module):
     
@@ -34,7 +41,8 @@ class DQNetwork(nn.Module):
 
 class Agent:
     def __init__(self, 
-                 player, 
+                 player,
+                 model_name=None,
                  state_space_dim, 
                  action_space_dim, 
                  device, 
@@ -60,18 +68,22 @@ class Agent:
         self.save_freq = save_freq
         
         # Initialize the NNs
-        self.online_net = DQNetwork(
-            state_space_dim, 
-            action_space_dim
-        ).to(device)
+        if model_name is not None:
+            self.online_net = load_model(model_name).to(device)
+            self.target_net = load_model(model_name).to(device)
+        else:
+            self.online_net = DQNetwork(
+                state_space_dim, 
+                action_space_dim
+            ).to(device)
 
-        self.target_net = DQNetwork(
-            state_space_dim, 
-            action_space_dim
-        ).to(device)
+            self.target_net = DQNetwork(
+                state_space_dim, 
+                action_space_dim
+            ).to(device)
 
-        # Initialize both with the same weight
-        self.target_net.load_state_dict(self.online_net.state_dict())
+            # Initialize both with the same weight
+            self.target_net.load_state_dict(self.online_net.state_dict())
 
         # Initialize optimizer with online_net 
         self.optimizer = T.optim.Adam(self.online_net.parameters(), lr=learning_rate)
