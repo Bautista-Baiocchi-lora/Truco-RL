@@ -4,7 +4,6 @@ import numpy as np
 import random
 from actions import game_actions
 
-
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
 def encode_game_state(player, game):
@@ -19,12 +18,11 @@ def encode_game_state(player, game):
 
     return np.concatenate((game, score, player_cards, cards_played, envido_state, truco_state)).astype(np.float32)
 
+
 class TrucoEnvironment:
 
     def __init__(self, players):
         self.game = TrucoGame(players)
-        self.action_space_dim=game_actions.shape[0]
-        self.state_space_dim=encode_game_state(self.game.get_mano(), self.game).shape[0]
         self.players = players
         self.games_won = [(p, 0) for p in players]
         self.games_played = 0
