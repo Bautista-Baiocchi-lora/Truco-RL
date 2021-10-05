@@ -56,6 +56,14 @@ class TrucoGame:
             
         return state
     
+    def get_score(self, player):
+        if self.scoreboard[0][0] == player:
+            return self.scoreboard[0][1]
+        else:
+            return self.scoreboard[1][1]
+        
+        return 0
+    
     def get_winner(self):
         if self.finished:
             if self.scoreboard[0][1] >= self.scoreboard[1][1]:
