@@ -5,18 +5,77 @@ import itertools
 import numpy as np
 from actions import game_actions_list
 import random
+from player import Player
 
-def load_model(name):
-    return T.load(f"./model_saves/model-v4-{name}.pt")
-
-def load_agent(name):
+def load_agent(name, device):
     player = Player(name)
-    return Agent(player, model_name=name)
-    
-    
+    loaded = T.load(f"./model_saves/model-v4-{name}.pt")
+    return Agent(player,
+                 state_space_dim=loaded['state_space_dim'], 
+                 action_space_dim=loaded['action_space_dim'], 
+                 model_type=loaded['model_type'], 
+                 model_state_dict=loaded['model_state_dict'], 
+                 optimizer_state_dict=loaded['optimizer_state_dict'],
+                 save_freq=loaded['save_freq'],
+                 batch_size=loaded['batch_size'],
+                 target_update_freq=loaded['target_update_freq'],
+                 min_replay_size=loaded['min_replay_size'],
+                 learning_rate=loaded['learning_rate'],
+                 replay_buffer_size=loaded['replay_buffer_size'],
+                 reward_buffer_size=loaded['reward_buffer_size'],
+                 epsilon_start=loaded['epsilon_start'],
+                 epsilon_end=loaded['epsilon_end'],
+                 epsilon_decay=loaded['epsilon_decay'],
+                 gamma=loaded['gamma'],
+                 step=loaded['step'],
+                 device=device)
 
+def save_agent(agent, name=None):
+    name = agent.get_name() if name is None else name
+    model = {
+        "model_state_dict": agent.online_net.state_dict(), 
+        "optimizer_state_dict": agent.optimizer.state_dict(), 
+        "model_type": agent.model_type, 
+        "action_space_dim": agent.action_space_dim,
+        "state_space_dim": agent.state_space_dim,
+        "save_freq": agent.save_freq,
+        "batch_size": agent.batch_size,
+        "target_update_freq": agent.target_update_freq,
+        "min_replay_size": agent.min_replay_size,
+        "learning_rate": agent.learning_rate,
+        "replay_buffer_size": agent.replay_buffer.maxlen,
+        "reward_buffer_size": agent.reward_buffer.maxlen,
+        "epsilon_start": agent.epsilon_start,
+        "epsilon_end": agent.epsilon_end,
+        "epsilon_decay": agent.epsilon_decay,
+        "gamma": agent.gamma,
+        "step": agent.step
+    }
+    T.save(model, f"./model_saves/model-v4-{name}.pt")
+    print(f"Model {name} saved. \r")
 
-class DQNetwork(nn.Module):
+class LessDQNetwork(nn.Module):
+    
+    def __init__(self, state_space_dim, action_space_dim):
+        super().__init__()
+        
+        self.net = nn.Sequential(
+            nn.Linear(state_space_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Linear(128, action_space_dim)
+        )
+        
+    def forward(self, x):
+        return self.net(x)
+    
+    def act(self, game_state_t):
+        q_values = self(game_state_t.unsqueeze(0))
+        
+        return q_values.detach().squeeze()
+
+class VeryDQNetwork(nn.Module):
     
     def __init__(self, state_space_dim, action_space_dim):
         super().__init__()
@@ -40,12 +99,13 @@ class DQNetwork(nn.Module):
         return q_values.detach().squeeze()
 
 class Agent:
-    def __init__(self, 
-                 player,
-                 model_name=None,
+    def __init__(self, player,
+                 device, 
                  state_space_dim, 
                  action_space_dim, 
-                 device, 
+                 model_type='deep',
+                 model_state_dict=None,
+                 optimizer_state_dict=None,
                  loss=nn.MSELoss(),
                  save_freq=200000,
                  batch_size=32,
@@ -57,36 +117,62 @@ class Agent:
                  epsilon_start=1.0, 
                  epsilon_end=0.02, 
                  epsilon_decay=10000,
-                 gamma=0.99
-                ):
+                 step=0,
+                 gamma=0.99):
         
         self.player = player
         self.loss = loss
         self.device = device
+        self.model_type = model_type
+        self.state_space_dim = state_space_dim
+        self.action_space_dim = action_space_dim
+        self.learning_rate = learning_rate
         
         # ever how many steps the online_net params should be saved to disk
         self.save_freq = save_freq
         
         # Initialize the NNs
-        if model_name is not None:
-            self.online_net = load_model(model_name).to(device)
-            self.target_net = load_model(model_name).to(device)
+        if self.model_type == 'deep':
+            self.online_net = VeryDQNetwork(
+                state_space_dim, 
+                action_space_dim
+            )
+
+            self.target_net = VeryDQNetwork(
+                state_space_dim, 
+                action_space_dim
+            )
         else:
-            self.online_net = DQNetwork(
+            self.online_net = LessDQNetwork(
                 state_space_dim, 
                 action_space_dim
-            ).to(device)
+            )
 
-            self.target_net = DQNetwork(
+            self.target_net = LessDQNetwork(
                 state_space_dim, 
                 action_space_dim
-            ).to(device)
+            )
+            
+            
+        # Load model from state dict
+        if model_state_dict is not None and optimizer_state_dict is not None:
+            self.online_net.load_state_dict(model_state_dict)
+            
 
-            # Initialize both with the same weight
-            self.target_net.load_state_dict(self.online_net.state_dict())
-
+        # Initialize both with the same weight
+        self.target_net.load_state_dict(self.online_net.state_dict())
+        
+        self.target_net = self.target_net.to(device)
+        self.online_net = self.online_net.to(device)
+        
+        
         # Initialize optimizer with online_net 
         self.optimizer = T.optim.Adam(self.online_net.parameters(), lr=learning_rate)
+        
+        # Load optimizer from state dict
+        if optimizer_state_dict is not None:
+            self.optimizer.load_state_dict(optimizer_state_dict)
+            
         
         self.replay_buffer = deque(maxlen=replay_buffer_size)
         self.min_replay_size = min_replay_size
@@ -99,7 +185,7 @@ class Agent:
         self.epsilon_end = epsilon_end
         self.epsilon_decay = epsilon_decay
         self.gamma = gamma
-        self.step = 0
+        self.step = step
         
     def choose_action(self, legal_actions, game_state):
         epsilon = np.interp(self.step, [0, self.epsilon_decay], [self.epsilon_start, self.epsilon_end])
@@ -169,11 +255,6 @@ class Agent:
         
     def save_reward(self, episode_reward):
         self.reward_buffer.append(episode_reward)
-        
-    def save_model(self, name=None):
-        name = self.get_name() if name is None else name
-        T.save(self.online_net.state_dict(), f"./model_saves/model-v4-{name}.pt")
-        print(f"Model {name} saved. \r")
 
     def get_name(self):
         return self.player.get_id()
