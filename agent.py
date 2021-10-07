@@ -197,13 +197,13 @@ class Agent:
             action = np.random.choice(legal_actions, 1, [1/len(legal_actions) for i in legal_actions])
             action = game_actions_list.index(action)
         else: 
-            # Compute Q-Values
-            game_state = T.as_tensor(game_state).to(self.device)
-            q_values = self.online_net.act(game_state)
+            # Copy game state so we dont have to send it back to cpu after compute
+            game_state_copy = game_state.copy()
+            game_state_copy = T.as_tensor(game_state_copy).to(self.device)
+            q_values = self.online_net.act(game_state_copy)
             # Get index of best action
             action = T.argmax(q_values, axis=0)
             # Send game_state and action to cpu so we can save it into replay memory
-            game_state = game_state.cpu().data.numpy()
             action = action.cpu().data.numpy()
             
         self.step += 1
