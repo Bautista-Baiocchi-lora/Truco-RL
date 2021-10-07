@@ -43,10 +43,15 @@ class TrucoGame:
             score.append(np.array(turn, dtype = np.int8))
         
         score = np.vstack(score)
+    
+        # Order cards from highest to lowest rank to reduce potential card space
+        ordered_cards = sorted(player.hand, key=lambda x: x.tier, reverse=True)
+        
+        player_cards = np.array(encode_card_array(ordered_cards), dtype=np.int8)
             
         state = {
             'game': game_config,
-            'player_cards': np.array(encode_card_array(player.hand), dtype=np.int8),
+            'player_cards': player_cards,
             'score': score,
             'cards_played': self.card_game.get_state(player),
             'envido_state': self.envido.get_state(player),
@@ -182,8 +187,9 @@ class TrucoGame:
                 logging.warning(f"{player} can't play the card {action_played} before responding to envido.")
         elif action_played == "fold":
             logging.info(f"{player} folded.")
-            if self.envido.is_active():
+            if self.envido.is_started():
                 self.envido.fold(player)
+                
             if self.truco.is_started():
                 self.truco.fold(player)
             else:

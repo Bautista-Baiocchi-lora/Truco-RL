@@ -124,8 +124,8 @@ class Truco:
     def fold(self, player):
         if self.is_active():
             self.truco_calls.append((player, 'no quiero'))
-        logging.debug(f"{player} forfeited truco")
-        opponent = self.game.get_opponent(player)
-        reward = self.get_reward()
-        self.game.update_score(opponent, reward)
-        logging.debug(f"{opponent} was rewarded {reward} for winning truco.")
+            logging.debug(f"{player} forfeited truco")
+            opponent = self.game.get_opponent(player)
+            reward = self.get_reward()
+            self.game.update_score(opponent, reward)
+            logging.debug(f"{opponent} was rewarded {reward} for winning truco.")

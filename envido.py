@@ -88,6 +88,8 @@ class Envido:
         envidos = np.zeros(2, dtype=np.int8)
         if self.is_finished():
             envidos = np.array([self.calculate_player_envido(player), self.calculate_player_envido(self.game.get_opponent(player))])
+        else:
+            envidos[0] = self.calculate_player_envido(player)
             
         return state, envidos
     
@@ -174,9 +176,10 @@ class Envido:
         self.finished = True
 
     def fold(self, player):
-        self.envido_calls.append((player, 'no quiero'))
-        logging.debug(f"{player} forfeited envido")
-        opponent = self.game.get_opponent(player)
-        reward = self.get_reward()
-        self.game.update_score(opponent, reward)
-        logging.debug(f"{opponent} was rewarded {reward} for winning envido.")
+        if self.is_active():
+            self.envido_calls.append((player, 'no quiero'))
+            logging.debug(f"{player} forfeited envido")
+            opponent = self.game.get_opponent(player)
+            reward = self.get_reward()
+            self.game.update_score(opponent, reward)
+            logging.debug(f"{opponent} was rewarded {reward} for winning envido.")

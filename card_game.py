@@ -1,8 +1,21 @@
 from more_itertools import locate
 import numpy as np
 import logging
+from collections import Counter
 
 from card_utils import encode_card_array
+
+card_game_tie_states = [
+    (['tie', 'tie', 'tie'], 'p0'),
+    (['tie', 'tie', 'p0'], 'p0'),
+    (['tie', 'tie', 'p1'], 'p1'),
+    (['tie', 'p0'], 'p0'),
+    (['tie', 'p1'], 'p1'),
+    (['p0', 'tie'], 'p0'),
+    (['p1', 'tie'], 'p1'),
+    (['p0', 'p1', 'tie'], 'p0'),
+    (['p1', 'p0', 'tie'], 'p1'),
+]
 
 class CardGame:
 
@@ -39,6 +52,10 @@ class CardGame:
         p0_cards = [card for player, card in self.cards_played if player == self.game.first_move_by]
         p1_cards = [card for player, card in self.cards_played if player == self.game.second_move_by]
         
+        # Minimum 4 cards must be played to have a winner
+        if len(p0_cards) + len(p1_cards) < 4:
+            return None
+        
         results = []
         for c1, c2 in zip(p0_cards, p1_cards):
             comparison = c1.tier - c2.tier
@@ -49,34 +66,19 @@ class CardGame:
             elif comparison == 0:
                 results.append('tie')
                     
-        if len(results) < 2:
-            return None
+        
+        for tie_state, winner in card_game_tie_states:
+            if results == tie_state:
+                return self.game.first_move_by if winner == 'p0' else self.game.second_move_by
             
-        from collections import Counter
-        
         counts = Counter(results)
-        
-        if 'tie' in counts:
-            if results[0] == 'tie':
-                if results[1] == 'tie':
-                    if len(results) == 3:
-                        return self.game.first_move_by if results[2] == 'tie' or results[2] == 'p0' else self.game.second_move_by
-                    else:
-                        return None
-                else:
-                    return self.game.first_move_by if results[1] == 'p0' else self.game.second_move_by
-            elif results[1] == 'tie':
-                return self.game.first_move_by if results[0] == 'p0' else self.game.second_move_by
-            elif len(results) == 3 and results[2] == 'tie':
-                return self.game.first_move_by if  results[0] == 'p0' else self.game.second_move_by
-            else:
-                return None
-        elif 'p0' not in counts:
-            return self.game.second_move_by
-        elif 'p1' not in counts:
+         
+        if counts['p0'] >= 2:
             return self.game.first_move_by
+        elif counts['p1'] >= 2:
+            return self.game.second_move_by
         else:
-            return self.game.first_move_by if counts['p0'] > counts['p1'] else self.game.second_move_by
+            return None
 
     
     def switch_turn(self):

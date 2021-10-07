@@ -4,8 +4,6 @@ import numpy as np
 import random
 from actions import game_actions
 
-logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
-
 def encode_game_state(player, game):
     state = game.get_state(player)
 
@@ -21,11 +19,12 @@ def encode_game_state(player, game):
 
 class TrucoEnvironment:
 
-    def __init__(self, players):
+    def __init__(self, players, logging_level=logging.WARNING):
         self.game = TrucoGame(players)
         self.players = players
         self.games_won = [(p, 0) for p in players]
         self.games_played = 0
+        logging.basicConfig(level=logging_level , format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
     def reset(self, force=False, goes_first=None): 
         logging.info("New Game.")
@@ -38,7 +37,7 @@ class TrucoEnvironment:
             self.games_won = [(p, wins + 1) if p == winner else (p, wins) for p, wins in self.games_won]
             self.games_played = self.games_won[0][1] + self.games_won[1][1]
         elif force:
-            logging.warn("Game ended with no winner.")
+            logging.debug("Game ended with no winner.")
             
         self.game = TrucoGame(self.players, goes_first=goes_first if goes_first else random.getrandbits(1))
         

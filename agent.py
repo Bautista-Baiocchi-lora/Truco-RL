@@ -9,7 +9,7 @@ from player import Player
 
 def load_agent(name, device):
     player = Player(name)
-    loaded = T.load(f"./model_saves/model-v4-{name}.pt")
+    loaded = T.load(f"./model_saves/model-{name}.pt")
     return Agent(player,
                  state_space_dim=loaded['state_space_dim'], 
                  action_space_dim=loaded['action_space_dim'], 
@@ -51,7 +51,7 @@ def save_agent(agent, name=None):
         "gamma": agent.gamma,
         "step": agent.step
     }
-    T.save(model, f"./model_saves/model-v4-{name}.pt")
+    T.save(model, f"./model_saves/model-{name}.pt")
     print(f"Model {name} saved. \r")
 
 class LessDQNetwork(nn.Module):
