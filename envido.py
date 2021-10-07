@@ -85,11 +85,11 @@ class Envido:
             
         state = np.vstack(state)
             
-        envidos = np.zeros(2, dtype=np.int8)
+        envidos = None
         if self.is_finished():
             envidos = np.array([self.calculate_player_envido(player), self.calculate_player_envido(self.game.get_opponent(player))])
         else:
-            envidos[0] = self.calculate_player_envido(player)
+            envidos = np.array([self.calculate_player_envido(player), -1])
             
         return state, envidos
     
