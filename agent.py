@@ -7,9 +7,14 @@ from actions import game_actions_list
 import random
 from player import Player
 
+def load_model(name, path=None):
+    if path is not None:
+        return T.load(f"./model_saves/{path}/model-{name}.pt")
+    return T.load(f"./model_saves/model-{name}.pt")
+
 def load_agent(name, device):
     player = Player(name)
-    loaded = T.load(f"./model_saves/model-{name}.pt")
+    loaded = load_model(name)
     return Agent(player,
                  state_space_dim=loaded['state_space_dim'], 
                  action_space_dim=loaded['action_space_dim'], 
@@ -131,28 +136,41 @@ class Agent:
         # ever how many steps the online_net params should be saved to disk
         self.save_freq = save_freq
         
+        def init_weights(m):
+            if isinstance(m, nn.Linear):
+                T.nn.init.xavier_uniform_(m.weight)
+                m.bias.data.fill_(0.01)
+        
         # Initialize the NNs
         if self.model_type == 'deep':
             self.online_net = VeryDQNetwork(
                 state_space_dim, 
                 action_space_dim
             )
+            
+            self.online_net.apply(init_weights)
 
             self.target_net = VeryDQNetwork(
                 state_space_dim, 
                 action_space_dim
             )
+            
+            
+            self.target_net.apply(init_weights)
         else:
             self.online_net = LessDQNetwork(
                 state_space_dim, 
                 action_space_dim
             )
+            
+            self.online_net.apply(init_weights)
 
             self.target_net = LessDQNetwork(
                 state_space_dim, 
                 action_space_dim
             )
             
+            self.target_net.apply(init_weights)
             
         # Load model from state dict
         if model_state_dict is not None and optimizer_state_dict is not None:
@@ -167,7 +185,7 @@ class Agent:
         
         
         # Initialize optimizer with online_net 
-        self.optimizer = T.optim.Adam(self.online_net.parameters(), lr=learning_rate)
+        self.optimizer = T.optim.AdamW(self.online_net.parameters(), lr=learning_rate)
         
         # Load optimizer from state dict
         if optimizer_state_dict is not None:
@@ -226,6 +244,9 @@ class Agent:
         rews_t = T.as_tensor(all_rews).to(self.device)
         new_obs_t = T.as_tensor(all_new_obs).to(self.device)
         dones_t = T.as_tensor(all_dones).to(self.device)
+        
+        # Zero our gradients before training
+        self.optimizer.zero_grad() 
 
         # Compute Targets
         target_q_values = self.target_net(new_obs_t)
@@ -242,7 +263,6 @@ class Agent:
         loss = self.loss(action_q_values, max_target_q_values).to(self.device)
 
         # Gradient Descent
-        self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         
