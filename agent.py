@@ -106,6 +106,33 @@ class VeryDQNetwork(nn.Module):
         
         return q_values.detach().squeeze()
 
+class RandomAgent:
+    def __init__(self, player):
+        self.player = player
+        
+        self.replay_buffer = deque(maxlen=10000)
+        self.reward_buffer = deque([0.0], maxlen=100)
+        
+    def choose_action(self, legal_actions, game_state):
+         # pick legal action given uniform distribution
+        action = np.random.choice(legal_actions, 1, [1/len(legal_actions) for i in legal_actions])
+        action = game_actions_list.index(action)
+        
+        return action
+    
+    def learn(self):
+        pass
+    
+    def save_transition(self, transition):
+        self.replay_buffer.append(transition)
+        
+    def save_reward(self, episode_reward):
+        self.reward_buffer.append(episode_reward)
+
+    def get_name(self):
+        return self.player.get_id()
+    
+    
 class Agent:
     def __init__(self, player,
                  device, 
