@@ -66,9 +66,9 @@ class LessDQNetwork(nn.Module):
         
         self.net = nn.Sequential(
             nn.Linear(state_space_dim, 256),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Linear(256, 128),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Linear(128, action_space_dim)
         )
         
@@ -87,11 +87,11 @@ class VeryDQNetwork(nn.Module):
         
         self.net = nn.Sequential(
             nn.Linear(state_space_dim, 256),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Linear(256, 128),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Linear(128, 64),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Linear(64, action_space_dim)
         )
         
@@ -278,3 +278,22 @@ class Agent:
 
     def get_name(self):
         return self.player.get_id()
+    
+    def get_config(self):
+        return {
+        "model_type": self.model_type, 
+        "action_space_dim": self.action_space_dim,
+        "state_space_dim": self.state_space_dim,
+        "save_freq": self.save_freq,
+        "batch_size": self.batch_size,
+        "target_update_freq": self.target_update_freq,
+        "min_replay_size": self.min_replay_size,
+        "learning_rate": self.learning_rate,
+        "replay_buffer_size": self.replay_buffer.maxlen,
+        "reward_buffer_size": self.reward_buffer.maxlen,
+        "epsilon_start": self.epsilon_start,
+        "epsilon_end": self.epsilon_end,
+        "epsilon_decay": self.epsilon_decay,
+        "gamma": self.gamma,
+        "step": self.step
+        }
