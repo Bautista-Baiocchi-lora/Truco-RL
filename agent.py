@@ -8,9 +8,7 @@ import random
 from player import Player
 
 def load_model(name, path=None):
-    if path is not None:
-        return T.load(f"./model_saves/{path}/model-{name}.pt")
-    return T.load(f"./model_saves/model-{name}.pt")
+    return T.load(f"./agent_saves/{name}/model.pt")
 
 def load_agent(name, device):
     player = Player(name)
@@ -37,6 +35,11 @@ def load_agent(name, device):
 
 def save_agent(agent, name=None):
     name = agent.get_name() if name is None else name
+    
+    #Create directory if doesn't exist
+    from pathlib import Path
+    Path(f"./agent_saves/{name}").mkdir(parents=True, exist_ok=True)
+    
     model = {
         "model_state_dict": agent.online_net.state_dict(), 
         "optimizer_state_dict": agent.optimizer.state_dict(), 
@@ -56,8 +59,8 @@ def save_agent(agent, name=None):
         "gamma": agent.gamma,
         "step": agent.step
     }
-    T.save(model, f"./model_saves/model-{name}.pt")
-    print(f"Model {name} saved. \r")
+    T.save(model, f"./agent_saves/{name}/model.pt")
+    print(f"Agent {name} saved. \r")
 
 class LessDQNetwork(nn.Module):
     
