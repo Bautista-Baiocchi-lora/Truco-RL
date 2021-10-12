@@ -69,9 +69,9 @@ class LessDQNetwork(nn.Module):
         
         self.net = nn.Sequential(
             nn.Linear(state_space_dim, 256),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(256, 128),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(128, action_space_dim)
         )
         
@@ -90,11 +90,11 @@ class VeryDQNetwork(nn.Module):
         
         self.net = nn.Sequential(
             nn.Linear(state_space_dim, 256),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(256, 128),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(128, 64),
-            nn.LeakyReLU(),
+            nn.Tanh(),
             nn.Linear(64, action_space_dim)
         )
         
@@ -140,6 +140,7 @@ class Agent:
                  action_space_dim, 
                  model_type='deep',
                  model_state_dict=None,
+                 weight_decay=1e-2,
                  optimizer_state_dict=None,
                  loss=nn.MSELoss(),
                  save_freq=200000,
@@ -215,7 +216,7 @@ class Agent:
         
         
         # Initialize optimizer with online_net 
-        self.optimizer = T.optim.AdamW(self.online_net.parameters(), lr=learning_rate)
+        self.optimizer = T.optim.AdamW(self.online_net.parameters(), lr=learning_rate, weight_decay=weight_decay)
         
         # Load optimizer from state dict
         if optimizer_state_dict is not None:

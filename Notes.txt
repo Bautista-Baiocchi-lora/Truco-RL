@@ -1,0 +1,56 @@
+
+
+['Cat', 'Dog', 'Bird', 'Snake']
+
+- shallow NN
+- Leaky Relu
+- replay_buffer_size=25000
+- batch_size=48 
+- target_update_freq=1500
+- epsilon_end=0.05
+- epsilon_decay=1000000
+- learning_rate=0.0005
+- wei
+
+
+----------------------------------------------------
+
+['Bass', 'Trout', 'Tuna', 'Salmon']
+
+- Deep NN
+- Leaky Relu
+- replay_buffer_size=25000
+- batch_size=48 
+- target_update_freq=1500
+- epsilon_end=0.05
+- epsilon_decay=1000000
+- learning_rate=0.0005
+
+
+---------------------------------
+
+['Fede', 'Angie', 'Rafa', 'Sophie']
+
+- shallow NN
+- Tanh
+- replay_buffer_size=25000
+- batch_size=48 
+- target_update_freq=1500
+- epsilon_end=0.05
+- epsilon_decay=1500000
+- learning_rate=0.0005
+
+---------------------------------
+
+['Coors', 'Bud', 'Patagonia', 'Stella']
+
+- Deep NN
+- Tanh
+- replay_buffer_size=25000
+- batch_size=48 
+- target_update_freq=1500
+- epsilon_end=0.05
+- epsilon_decay=1500000
+- learning_rate=0.0005
+- weight_decay=1e-3
+

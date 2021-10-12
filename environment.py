@@ -27,7 +27,6 @@ class TrucoEnvironment:
         logging.basicConfig(level=logging_level , format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
     def reset(self, force=False, goes_first=None): 
-        logging.info("New Game.")
         # Clear player cards
         for player in self.players:
             player.hand.clear()
@@ -42,6 +41,8 @@ class TrucoEnvironment:
         self.game = TrucoGame(self.players, goes_first=goes_first if goes_first else random.getrandbits(1))
         
         first_move_by = self.game.get_mano()
+        
+        logging.info("New Game.")
         
         return first_move_by, self.game.get_legal_actions(first_move_by), encode_game_state(first_move_by, self.game)
 
