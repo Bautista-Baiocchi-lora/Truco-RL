@@ -281,17 +281,16 @@ class Agent:
 
         # Compute Targets
         target_q_values = self.target_net(new_obs_t)
-        max_target_q_values = target_q_values.max(dim=1, keepdim=True)[0]
-
-
+        max_target_q_values = target_q_values.max(dim=1, keepdim=True)[0].squeeze()
+       
         targets = rews_t + self.gamma * (1 - dones_t) * max_target_q_values
 
         # Compute Loss
         q_values = self.online_net(obs_t)
-        action_q_values = T.gather(input=q_values, dim=1, index=actions_t)
+        action_q_values = T.gather(input=q_values, dim=1, index=actions_t).squeeze()
 
         # Calculate loss
-        loss = self.loss(action_q_values, max_target_q_values).to(self.device)
+        loss = self.loss(action_q_values, targets).to(self.device)
 
         # Gradient Descent
         loss.backward()
